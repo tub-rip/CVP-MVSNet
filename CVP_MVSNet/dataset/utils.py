@@ -6,24 +6,27 @@
 #       Thanks for the authors for the great code.
 #       MVSNet: https://github.com/YoYo000/MVSNet
 #       MVSNet_pytorch: https://github.com/xy-guo/MVSNet_pytorch
-
+import matplotlib.pyplot as plt
 import numpy as np
 import re
 import sys
 from PIL import Image
 import os, errno
+
+
 # For debug:
 # import matplotlib.pyplot as plt
 # import pdb
 
-def readScanList(scal_list_file,mode,logger):
+def readScanList(scal_list_file, mode, logger):
     logger.info("Reading scan list...")
     scan_list_f = open(scal_list_file, "r")
     scan_list = scan_list_f.read()
     scan_list = scan_list.split()
     scan_list_f.close()
-    logger.info("Done, Using following scans for "+mode+":\n"+str(scan_list))
+    logger.info("Done, Using following scans for " + mode + ":\n" + str(scan_list))
     return scan_list
+
 
 def read_pfm(filename):
     file = open(filename, 'rb')
@@ -62,12 +65,12 @@ def read_pfm(filename):
     file.close()
     return data, scale
 
-def save_pfm(filename, image, scale=1):
 
+def save_pfm(filename, image, scale=1):
     if not os.path.exists(os.path.dirname(filename)):
         try:
             os.makedirs(os.path.dirname(filename))
-        except OSError as exc: # Guard against race condition
+        except OSError as exc:  # Guard against race condition
             if exc.errno != errno.EEXIST:
                 raise
 
@@ -99,8 +102,8 @@ def save_pfm(filename, image, scale=1):
     image.tofile(file)
     file.close()
 
-def read_cam_file(filename):
 
+def read_cam_file(filename):
     with open(filename) as f:
         lines = f.readlines()
         lines = [line.rstrip() for line in lines]
@@ -112,8 +115,9 @@ def read_cam_file(filename):
     # depth_min & depth_interval: line 11
     depth_min = float(lines[11].split()[0])
     depth_interval = float(lines[11].split()[1])
-    depth_max = depth_min+(256*depth_interval)
+    depth_max = depth_min + (256 * depth_interval)
     return intrinsics, extrinsics, depth_min, depth_max
+
 
 def write_cam(filename, intrinsic, extrinsic, depth_min, depth_max):
     with open(filename, 'w') as f:
@@ -127,33 +131,39 @@ def write_cam(filename, intrinsic, extrinsic, depth_min, depth_max):
             for k in range(3):
                 f.write(str(intrinsic[j, k]) + ' ')
             f.write('\n')
-        f.write('\n%f %f\n' % (depth_min,depth_max))
+        f.write('\n%f %f\n' % (depth_min, depth_max))
+
 
 def read_img(filename):
     img = Image.open(filename)
+    # img = img.resize((128, 128))
     img = np.array(img)
+    # plt.imshow(img)
+    # plt.show()
     if img.ndim == 2:
         img = np.stack((img,) * 3, axis=-1)
+        img = img[:128, :128]
+        # img = np.pad((), (), (0, 0)) img[:260, :260]
     # scale 0~255 to 0~1
     img = np.array(img, dtype=np.float32) / 255.
     if img.shape[0] == 1200:
-        img = img[:1184,:1600,:]
+        img = img[:1184, :1600, :]
 
     return img
 
-def write_img(filename,image):
 
+def write_img(filename, image):
     if not os.path.exists(os.path.dirname(filename)):
         try:
             os.makedirs(os.path.dirname(filename))
-        except OSError as exc: # Guard against race condition
+        except OSError as exc:  # Guard against race condition
             if exc.errno != errno.EEXIST:
                 raise
 
     image.save(filename)
     return 1
 
+
 def read_depth(filename):
     # read pfm depth file
     return np.array(read_pfm(filename)[0], dtype=np.float32)
-
