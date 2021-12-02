@@ -62,7 +62,7 @@ class CostRegNet(nn.Module):
             nn.ReLU(inplace=True))
 
         self.conv6 = nn.Sequential(
-            nn.ConvTranspose3d(16, 16, kernel_size=3, padding=1, output_padding=1, stride=2, bias=False),
+            nn.ConvTranspose3d(32, 16, kernel_size=3, padding=1, output_padding=1, stride=2, bias=False),
             nn.BatchNorm3d(16),
             nn.ReLU(inplace=True))
 
