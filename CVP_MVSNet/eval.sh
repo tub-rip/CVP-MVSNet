@@ -20,8 +20,8 @@ python3 eval.py \
 --mode="test" \
 \
 --dataset_root=$DATASET_ROOT \
---imgsize=1200 \
---nsrc=4 \
+--imgsize=240 \
+--nsrc=3 \
 --nscale=5 \
 \
 --batch_size=1 \
