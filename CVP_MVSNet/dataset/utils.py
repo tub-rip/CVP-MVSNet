@@ -131,6 +131,9 @@ def write_cam(filename, intrinsic, extrinsic, depth_min, depth_max):
 
 def read_img(filename):
     img = Image.open(filename)
+    img = np.array(img)
+    if img.ndim == 2:
+        img = np.stack((img,) * 3, axis=-1)
     # scale 0~255 to 0~1
     img = np.array(img, dtype=np.float32) / 255.
     if img.shape[0] == 1200:
