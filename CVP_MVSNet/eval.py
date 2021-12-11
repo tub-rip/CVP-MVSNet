@@ -2,8 +2,7 @@
 # by: Jiayu Yang
 # date: 2019-08-29
 
-import os,sys,time,logging,argparse,datetime,re
-
+import os, sys, time, logging, argparse, datetime, re
 
 import torch
 import torch.nn as nn
@@ -34,7 +33,7 @@ assert args.mode == "test"
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 curTime = time.strftime('%Y%m%d-%H%M', time.localtime(time.time()))
-log_path = args.loggingdir+args.info.replace(" ","_")+"/"
+log_path = args.loggingdir + args.info.replace(" ", "_") + "/"
 if not os.path.isdir(args.loggingdir):
     os.mkdir(args.loggingdir)
 if not os.path.isdir(log_path):
@@ -49,13 +48,14 @@ consoleHandler = logging.StreamHandler(sys.stdout)
 consoleHandler.setFormatter(formatter)
 logger.addHandler(consoleHandler)
 logger.info("Logger initialized.")
-logger.info("Writing logs to file:"+logfile)
+logger.info("Writing logs to file:" + logfile)
 
 settings_str = "All settings:\n"
 line_width = 30
-for k,v in vars(args).items(): 
-    settings_str += '{0}: {1}\n'.format(k,v)
+for k, v in vars(args).items():
+    settings_str += '{0}: {1}\n'.format(k, v)
 logger.info(settings_str)
+
 
 # Run CVP-MVSNet to save depth maps and confidence maps
 def save_depth():
@@ -71,7 +71,7 @@ def save_depth():
     # load checkpoint file specified by args.loadckpt
     logger.info("loading model {}".format(args.loadckpt))
     state_dict = torch.load(args.loadckpt)
-    model.load_state_dict(state_dict['model'],strict=False)
+    model.load_state_dict(state_dict['model'], strict=False)
 
     with torch.no_grad():
 
@@ -83,7 +83,7 @@ def save_depth():
 
             torch.cuda.empty_cache()
 
-            outputs = model(\
+            outputs = model( \
                 sample_cuda["ref_img"].float(), \
                 sample_cuda["src_imgs"].float(), \
                 sample_cuda["ref_intrinsics"], \
@@ -100,7 +100,8 @@ def save_depth():
 
             del sample_cuda
             filenames = sample["filename"]
-            logger.info('Iter {}/{}, time = {:.3f}'.format(batch_idx, len(test_loader),time.time() - start_time))
+            logger.info('Iter {}/{}, time = {:.3f}'.format(batch_idx, len(test_loader),
+                                                           time.time() - start_time))
 
             # save depth maps and confidence maps
             for filename, est_depth, photometric_confidence in zip(filenames, depth_est, prob_confidence):
@@ -110,9 +111,10 @@ def save_depth():
                 os.makedirs(confidence_filename.rsplit('/', 1)[0], exist_ok=True)
                 # save depth maps
                 save_pfm(depth_filename, est_depth)
-                write_depth_img(depth_filename+".png", est_depth)
+                write_depth_img(depth_filename + ".png", est_depth)
                 # Save prob maps
                 save_pfm(confidence_filename, photometric_confidence)
+
 
 def read_pfm(filename):
     file = open(filename, 'rb')
@@ -151,6 +153,7 @@ def read_pfm(filename):
     file.close()
     return data, scale
 
+
 def read_camera_parameters(filename):
     with open(filename) as f:
         lines = f.readlines()
@@ -173,6 +176,7 @@ def read_pair_file(filename):
             src_views = [int(x) for x in f.readline().rstrip().split()[1::2]]
             data.append((ref_view, src_views))
     return data
+
 
 # read an image
 def read_img(filename):
@@ -200,12 +204,12 @@ def save_mask(filename, mask):
     mask = mask.astype(np.uint8) * 255
     Image.fromarray(mask).save(filename)
 
-def save_pfm(filename, image, scale=1):
 
+def save_pfm(filename, image, scale=1):
     if not os.path.exists(os.path.dirname(filename)):
         try:
             os.makedirs(os.path.dirname(filename))
-        except OSError as exc: # Guard against race condition
+        except OSError as exc:  # Guard against race condition
             if exc.errno != errno.EEXIST:
                 raise
 
@@ -237,21 +241,23 @@ def save_pfm(filename, image, scale=1):
     image.tofile(file)
     file.close()
 
-def write_depth_img(filename,depth):
 
+def write_depth_img(filename, depth):
     if not os.path.exists(os.path.dirname(filename)):
         try:
             os.makedirs(os.path.dirname(filename))
-        except OSError as exc: # Guard against race condition
+        except OSError as exc:  # Guard against race condition
             if exc.errno != errno.EEXIST:
                 raise
-    min_depth = 1
-    max_depth = 13.8
+    min_depth = depth.min()
+    max_depth = depth.max()
     scaled_depth = 255 * (depth - min_depth) / (max_depth - min_depth)
     image = Image.fromarray(scaled_depth.astype(np.uint8)).convert("L")
     # image = Image.fromarray((depth-500)/2).convert("L")
     image.save(filename)
+    print('min_depth', min_depth, 'max_depth,', max_depth)
     return 1
+
 
 # project the reference point cloud into the source view, then project back
 def reproject_with_depth(depth_ref, intrinsics_ref, extrinsics_ref, depth_src, intrinsics_src, extrinsics_src):
@@ -297,8 +303,12 @@ def reproject_with_depth(depth_ref, intrinsics_ref, extrinsics_ref, depth_src, i
 def check_geometric_consistency(depth_ref, intrinsics_ref, extrinsics_ref, depth_src, intrinsics_src, extrinsics_src):
     width, height = depth_ref.shape[1], depth_ref.shape[0]
     x_ref, y_ref = np.meshgrid(np.arange(0, width), np.arange(0, height))
-    depth_reprojected, x2d_reprojected, y2d_reprojected, x2d_src, y2d_src = reproject_with_depth(depth_ref, intrinsics_ref, extrinsics_ref,
-                                                     depth_src, intrinsics_src, extrinsics_src)
+    depth_reprojected, x2d_reprojected, y2d_reprojected, x2d_src, y2d_src = reproject_with_depth(depth_ref,
+                                                                                                 intrinsics_ref,
+                                                                                                 extrinsics_ref,
+                                                                                                 depth_src,
+                                                                                                 intrinsics_src,
+                                                                                                 extrinsics_src)
     # check |p_reproj-p_1| < 1
     dist = np.sqrt((x2d_reprojected - x_ref) ** 2 + (y2d_reprojected - y_ref) ** 2)
 
@@ -313,11 +323,10 @@ def check_geometric_consistency(depth_ref, intrinsics_ref, extrinsics_ref, depth
 
 
 def filter_depth(dataset_root, scan, out_folder, plyfilename):
-
-    print("Starting fusion for:"+out_folder)
+    print("Starting fusion for:" + out_folder)
 
     # the pair file
-    pair_file = os.path.join(dataset_root,'Cameras/pair.txt')
+    pair_file = os.path.join(dataset_root, 'Cameras/pair.txt')
     # for the final point cloud
     vertexs = []
     vertex_colors = []
@@ -332,7 +341,8 @@ def filter_depth(dataset_root, scan, out_folder, plyfilename):
             os.path.join(dataset_root, 'Cameras/{:0>8}_cam.txt'.format(ref_view)))
 
         # load the reference image
-        ref_img = read_img(os.path.join(dataset_root, "Rectified",scan, 'rect_{:03d}_3_r5000.png'.format(ref_view+1))) # Image start from 1.
+        ref_img = read_img(os.path.join(dataset_root, "Rectified", scan,
+                                        'rect_{:03d}_3_r5000.png'.format(ref_view + 1)))  # Image start from 1.
         # load the estimated depth of the reference view
         ref_depth_est, scale = read_pfm(os.path.join(out_folder, 'depth_est/{:0>8}.pfm'.format(ref_view)))
         # load the photometric mask of the reference view
@@ -354,10 +364,11 @@ def filter_depth(dataset_root, scan, out_folder, plyfilename):
             # the estimated depth of the source view
             src_depth_est, scale = read_pfm(os.path.join(out_folder, 'depth_est/{:0>8}.pfm'.format(src_view)))
 
-            geo_mask, depth_reprojected, x2d_src, y2d_src = check_geometric_consistency(ref_depth_est, ref_intrinsics, ref_extrinsics,
-                                                                      src_depth_est,
-                                                                      src_intrinsics, src_extrinsics)
-            
+            geo_mask, depth_reprojected, x2d_src, y2d_src = check_geometric_consistency(ref_depth_est, ref_intrinsics,
+                                                                                        ref_extrinsics,
+                                                                                        src_depth_est,
+                                                                                        src_intrinsics, src_extrinsics)
+
             geo_mask_sum += geo_mask.astype(np.int32)
             all_srcview_depth_ests.append(depth_reprojected)
             all_srcview_x.append(x2d_src)
@@ -378,7 +389,6 @@ def filter_depth(dataset_root, scan, out_folder, plyfilename):
                                                                                     photo_mask.mean(),
                                                                                     geo_mask.mean(), final_mask.mean()))
 
-
         height, width = depth_est_averaged.shape[:2]
         x, y = np.meshgrid(np.arange(0, width), np.arange(0, height))
         # valid_points = np.logical_and(final_mask, ~used_mask[ref_view])
@@ -386,7 +396,7 @@ def filter_depth(dataset_root, scan, out_folder, plyfilename):
         print("valid_points", valid_points.mean())
         x, y, depth = x[valid_points], y[valid_points], depth_est_averaged[valid_points]
         ref_img = np.array(ref_img)
- 
+
         color = ref_img[valid_points]
 
         xyz_ref = np.matmul(np.linalg.inv(ref_intrinsics),
@@ -411,6 +421,7 @@ def filter_depth(dataset_root, scan, out_folder, plyfilename):
     print("Saving the final model to", plyfilename)
     PlyData([el], comments=['Model created by CVP-MVSNet.']).write(plyfilename)
     print("Model saved.")
+
 
 if __name__ == '__main__':
     # step1. save all the depth maps and the masks in outputs directory
