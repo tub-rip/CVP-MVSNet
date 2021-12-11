@@ -19,10 +19,10 @@ python3 train.py \
 --nsrc=2 \
 --nscale=2 \
 \
---epochs=40 \
+--epochs=20 \
 --lr=0.001 \
 --lrepochs="10,12,14,20:2" \
---batch_size=16 \
+--batch_size=4 \
 \
 --loadckpt='' \
 --logckptdir=$CKPT_DIR \
