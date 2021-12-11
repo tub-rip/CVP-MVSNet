@@ -21,7 +21,7 @@ python3 eval.py \
 \
 --dataset_root=$DATASET_ROOT \
 --imgsize=128 \
---nsrc=10 \
+--nsrc=3 \
 --nscale=5 \
 \
 --batch_size=1 \

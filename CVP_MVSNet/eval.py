@@ -245,8 +245,11 @@ def write_depth_img(filename,depth):
         except OSError as exc: # Guard against race condition
             if exc.errno != errno.EEXIST:
                 raise
-
-    image = Image.fromarray((depth-500)/2).convert("L")
+    min_depth = 1
+    max_depth = 13.8
+    scaled_depth = 255 * (depth - min_depth) / (max_depth - min_depth)
+    image = Image.fromarray(scaled_depth.astype(np.uint8)).convert("L")
+    # image = Image.fromarray((depth-500)/2).convert("L")
     image.save(filename)
     return 1
 
