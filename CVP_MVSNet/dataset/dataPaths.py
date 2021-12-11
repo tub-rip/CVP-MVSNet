@@ -15,7 +15,7 @@ def getPairListFile(data_root,mode):
     return pair_list_file
 
 def getDepthFile(data_root,mode,scan,view):
-    depth_name = "depth_map_"+str(view).zfill(4)+".pfm"
+    depth_name = "depth_map_"+str(view).zfill(4)+".exr"
     if mode == "train":
         scan_path = "Depths/"+scan+"_train/"
     else:
