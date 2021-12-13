@@ -164,7 +164,10 @@ def write_img(filename, image):
 
 def read_depth(filename):
     # read pfm depth file
-    return np.array(readEXR(filename)[1], dtype=np.float32)
+    # return np.array(read_pfm(filename)[0], dtype=np.float32)
+    val = readEXR(filename)[1]
+    print('******', np.amin(val), np.amax(val), np.shape(val))
+    return np.array(val, dtype=np.float32)
 
 
 def readEXR(filename):
